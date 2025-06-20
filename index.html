@@ -1,0 +1,2743 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD. HD Putra - Sistem Manajemen Kayu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0627ba 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 255, 255, 0.1) 10px,
+                    rgba(255, 255, 255, 0.1) 20px);
+            animation: slide 20s linear infinite;
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin: 0 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            /* Added for ripple effect */
+            overflow: hidden;
+            /* Added for ripple effect */
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Rekap Navigation */
+        .rekap-nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+            flex-wrap: wrap;
+            /* Agar responsif di layar kecil */
+        }
+
+        .rekap-btn {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            position: relative;
+            /* Added for ripple effect */
+            overflow: hidden;
+            /* Added for ripple effect */
+        }
+
+        .rekap-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4);
+        }
+
+        .rekap-btn.active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .rekap-content {
+            display: none;
+        }
+
+        .rekap-content.active {
+            display: block;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card h4 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #27ae60;
+            margin-bottom: 5px;
+        }
+
+        .stat-count {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .stat-desc {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto 50px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        h3 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            margin: 20px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 25px 0;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .table-section {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 15px 12px;
+            text-align: center;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), rgba(41, 128, 185, 0.05));
+            transform: scale(1.01);
+        }
+
+        tbody tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        #totalHarga,
+        #totalHargaPenjualan {
+            text-align: center;
+            margin: 25px 0;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border: 2px solid #3498db;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+
+        .payment-section {
+            background: rgba(255, 255, 255, 0.9);
+            margin-top: 30px;
+            padding: 30px;
+            border-radius: 15px;
+            border-top: 4px solid #3498db;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .payment-input-group {
+            margin-bottom: 20px;
+        }
+
+        #hasilPembayaran,
+        #hasilPembayaranPenjualan {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: center;
+            min-height: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .lunas {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 2px solid #27ae60;
+            animation: pulse 2s infinite;
+        }
+
+        .kembalian {
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border: 2px solid #17a2b8;
+        }
+
+        .kasbon {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .empty-payment {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            border: 2px solid #ced4da;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                font-family: 'Times New Roman', serif;
+                font-size: 12px;
+                line-height: 1.4;
+                /* Adjusted line height */
+                margin: 0;
+                padding: 20px;
+            }
+
+            header,
+            footer,
+            .btn-group,
+            button,
+            .form-section,
+            .tab-navigation,
+            .rekap-nav {
+                display: none !important;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+                background: white;
+                border-radius: 0;
+                max-width: none;
+                width: auto;
+            }
+
+            .table-section,
+            .payment-section {
+                background: white;
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+                margin: 0;
+            }
+
+            h1,
+            h2,
+            h3 {
+                text-align: center;
+                margin: 10px 0;
+                color: black;
+                text-shadow: none;
+            }
+
+            h1 {
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            h2 {
+                font-size: 16px;
+                font-weight: bold;
+            }
+
+            h3 {
+                font-size: 14px;
+                font-weight: bold;
+                text-align: left;
+            }
+
+            table {
+                font-size: 10px;
+                border-collapse: collapse;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            th,
+            td {
+                padding: 5px 2px;
+                text-align: left;
+                border-bottom: 1px dashed #ccc;
+            }
+
+            th {
+                background: none;
+                color: black;
+                font-weight: bold;
+                border-bottom: 1px solid black;
+            }
+
+            tbody tr:hover,
+            tbody tr:nth-child(even) {
+                background: none;
+                transform: none;
+            }
+
+            #totalHarga,
+            #totalHargaPenjualan,
+            #hasilPembayaran,
+            #hasilPembayaranPenjualan {
+                text-align: right;
+                font-size: 1rem;
+                padding: 5px 0;
+                border: none;
+                background: none;
+                box-shadow: none;
+                margin-top: 10px;
+                color: black;
+            }
+
+            .payment-title {
+                text-align: center;
+                font-size: 1.1rem;
+                margin-top: 15px;
+                color: black;
+            }
+
+            .lunas,
+            .kembalian,
+            .kasbon,
+            .empty-payment {
+                background: none;
+                color: black;
+                border: none;
+                animation: none;
+            }
+
+            .signature-section {
+                margin-top: 60px;
+                /* Adjusted margin-top for more space */
+                page-break-inside: avoid;
+            }
+
+            .signature-row {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 0;
+                /* Adjusted to 0 as margin-top is now on signature-section */
+            }
+
+            .signature-box {
+                text-align: center;
+                width: 200px;
+            }
+
+            hr {
+                border: none;
+                border-top: 1px solid #000;
+                margin: 15px 0;
+            }
+
+            p {
+                margin: 5px 0;
+                /* Adjusted margin for paragraphs to add more line spacing */
+            }
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 1024px) {
+            .container {
+                margin: 20px;
+                padding: 30px 25px;
+            }
+
+            .header-title {
+                font-size: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+            }
+
+            .btn-group {
+                justify-content: stretch;
+            }
+
+            button {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .container {
+                margin: 15px;
+                padding: 20px 15px;
+            }
+
+            .header-title {
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px 20px;
+                margin: 0;
+            }
+
+            .tab-navigation {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .tab-btn {
+                width: 100%;
+                margin: 0;
+            }
+
+            table {
+                font-size: 12px;
+                min-width: 600px;
+            }
+
+            th,
+            td {
+                padding: 10px 6px;
+            }
+
+            #totalHarga,
+            #totalHargaPenjualan {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+
+            .payment-section {
+                padding: 20px 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                margin: 10px;
+                padding: 15px 10px;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+                margin-bottom: 20px;
+            }
+
+            .form-section,
+            .table-section,
+            .payment-section {
+                padding: 15px;
+            }
+
+            input,
+            select,
+            textarea {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th,
+            td {
+                padding: 8px 4px;
+            }
+
+            #totalHarga,
+            #totalHargaPenjualan {
+                font-size: 1.1rem;
+                padding: 12px;
+            }
+
+            #hasilPembayaran,
+            #hasilPembayaranPenjualan {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+
+
+        /* --- Login Page Specific Styles (integrated from login.html) --- */
+
+        /* Reset for login page */
+        .login-body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: #0a0a0a;
+            /* Specific dark background for login */
+        }
+
+        /* Animated Background */
+        .login-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        .login-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .login-background::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite alternate;
+        }
+
+        /* Floating Elements */
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: floatUp 15s infinite linear;
+        }
+
+        .shape:nth-child(1) {
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            left: 20%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            left: 35%;
+            width: 100px;
+            height: 100px;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            left: 70%;
+            width: 40px;
+            height: 40px;
+            animation-delay: 6s;
+        }
+
+        .shape:nth-child(5) {
+            left: 90%;
+            width: 120px;
+            height: 120px;
+            animation-delay: 8s;
+        }
+
+        /* Main Container for Login */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            /* Consistent gradient */
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            /* Consistent with main buttons */
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            margin-top: 12px;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            /* Consistent with main buttons */
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+            /* Consistent with main buttons */
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .forgot-password a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(0deg);
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh) rotate(360deg);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoFloat {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Responsive Design for Login */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
+                margin: 20px;
+            }
+
+            .company-name {
+                font-size: 24px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translateY(-50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        /* Ripple Effect Animation */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            animation: rippleEffect 0.6s linear forwards;
+            transform: scale(0);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes rippleEffect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Styles from surat.html */
+        .surat-header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 8px;
+        }
+
+        .surat-content {
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .info-left {
+            width: 48%;
+        }
+
+        .info-right {
+            width: 48%;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin: 12px 0 8px 0;
+            text-decoration: underline;
+        }
+
+        /* Gaya untuk field dengan titik dua sejajar */
+        .aligned-field {
+            display: flex;
+            margin-bottom: 2px;
+        }
+
+        .field-label {
+            width: 120px;
+            /* Lebar label */
+            flex-shrink: 0;
+        }
+
+        .field-colon {
+            width: 10px;
+            /* Lebar titik dua */
+            flex-shrink: 0;
+        }
+
+        .field-value {
+            flex: 1;
+        }
+
+        .aligned-field-right {
+            display: flex;
+            margin-bottom: 2px;
+        }
+
+        .field-label-right {
+            width: 100px;
+            /* Lebar label di kolom kanan */
+            flex-shrink: 0;
+        }
+
+        /* Gaya tabel untuk cetak */
+        #printDaftarKayuTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 9px;
+            margin: 12px 0;
+        }
+
+        #printDaftarKayuTable th,
+        #printDaftarKayuTable td {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #printDaftarKayuTable th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .signature-section {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .notes-section {
+            margin-top: 15px;
+            font-size: 9px;
+            line-height: 1.2;
+        }
+
+        /* ==================================================================== */
+        /* ATURAN CETAK UTAMA UNTUK MEMASTIKAN HANYA 1 HALAMAN SURAT YANG DICETAK */
+        /* ==================================================================== */
+        @media print {
+
+            @page {
+                size: A4;
+                /* Ini adalah aturan yang memastikan ukuran kertas A4 */
+                margin: 0;
+                /* Hapus semua margin default printer */
+            }
+
+            /* Sembunyikan semua konten di body secara default */
+            body {
+                visibility: hidden;
+                /* Sembunyikan seluruh body saat cetak */
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Jadikan hanya #print-area yang terlihat */
+            #print-area {
+                visibility: visible;
+                /* Jadikan print-area terlihat */
+                position: absolute;
+                /* Posisikan absolut dari body */
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                /* Atau auto jika konten bisa meluap */
+                padding: 0;
+                margin: 0;
+                box-sizing: border-box;
+                /* Pastikan mengambil ruang meskipun konten awalnya kecil */
+                min-height: 297mm;
+                /* Minimal setinggi A4 */
+            }
+
+            /* Jadikan semua elemen di dalam #print-area juga terlihat */
+            #print-area * {
+                visibility: visible;
+            }
+
+            /* Aturan khusus untuk kontainer surat di dalam area cetak */
+            #printedSuratContainer {
+                width: 100%;
+                /* Lebar kontainer 100% dari print-area */
+                height: auto;
+                min-height: 100vh;
+                /* Memastikan cukup tinggi untuk satu halaman */
+                margin: 0;
+                padding: 15mm;
+                /* Padding ini menjadi margin konten di dalam A4 */
+                font-size: 10px;
+                line-height: 1.2;
+                border: 2px solid #000;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+                /* Membantu menjaga konten tetap bersama */
+            }
+
+            /* Sembunyikan tombol aksi pada tabel saat dicetak */
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="header-title">UD. HD Putra</h1>
+            <p class="header-subtitle">Sistem Manajemen Pembelian & Penjualan Kayu</p>
+        </div>
+    </header>
+
+    <div class="tab-navigation">
+        <button class="tab-btn" onclick="openTab(event, 'Pembelian')">Pembelian Kayu</button>
+        <button class="tab-btn" onclick="openTab(event, 'Penjualan')">Penjualan Barang</button>
+        <button class="tab-btn" onclick="openTab(event, 'SuratAngkutan')">Surat Angkutan Kayu</button>
+    </div>
+
+    <div class="container">
+        <div id="Pembelian" class="tab-content">
+            <h2>Form Pembelian Kayu</h2>
+
+            <div class="form-section">
+                <h4>Informasi Penjual</h4>
+                <div class="input-group">
+                    <label for="namaPenjual">Nama Penjual</label>
+                    <input type="text" id="namaPenjual" placeholder="Masukkan nama penjual" required>
+                </div>
+
+                <h4>Data Kayu</h4>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="jenisKayu">Jenis Kayu</label>
+                        <select id="jenisKayu">
+                            <option value="Jati">🌳 Jati</option>
+                            <option value="Mahoni">🌲 Mahoni</option>
+                            <option value="Alba">🌿 Alba</option>
+                            <option value="Bayur">🍃 Bayur</option>
+                            <option value="Pete">🌱 Pete</option>
+                            <option value="Duren">🎋 Duren</option>
+                            <option value="Keras">🪨 Keras</option>
+                            <option value="Lain-lain">📦 Lain-lain</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="diameter">Diameter (cm)</label>
+                        <input type="number" id="diameter" placeholder="Contoh: 20" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="panjang">Panjang (cm)</label>
+                        <input type="number" id="panjang" placeholder="Contoh: 400" step="0.01" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="jumlah">Jumlah Batang</label>
+                        <input type="number" id="jumlah" value="1" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="hargaSatuan">Harga Satuan (Rp)</label>
+                        <input type="number" id="hargaSatuan" placeholder="Contoh: 1500" required>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-add" onclick="tambahKayu()">➕ Tambah Kayu</button>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3>Daftar Pembelian</h3>
+                <div class="table-wrapper">
+                    <table id="tabelKayu">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Jenis Kayu</th>
+                                <th>Diameter (cm)</th>
+                                <th>Panjang (cm)</th>
+                                <th>Jumlah Batang</th>
+                                <th>Harga Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="totalHarga">💰 Total Harga Keseluruhan: Rp 0</p>
+            </div>
+
+            <div id="formPembayaran" class="payment-section" style="display: none;">
+                <h3 class="payment-title">Informasi Pembayaran</h3>
+                <div class="payment-input-group">
+                    <label for="totalBayar">Jumlah Bayar (Rp)</label>
+                    <input type="number" id="totalBayar" placeholder="Masukkan jumlah yang dibayarkan">
+                </div>
+                <div class="input-group">
+                    <label for="catatan">Catatan (Opsional)</label>
+                    <textarea id="catatan" rows="3" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
+                </div>
+                <div id="hasilPembayaran" class="empty-payment">💡 Masukkan jumlah pembayaran untuk melihat status</div>
+                <div class="btn-group">
+                    <button class="btn-print" onclick="printReceiptPembelian()">🖨️ Cetak Struk Pembelian</button>
+                    <button class="btn-clear" onclick="selesaiTransaksiPembelian()">✅ Transaksi Selesai</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="Penjualan" class="tab-content">
+            <h2>Form Penjualan Barang</h2>
+
+            <div class="form-section">
+                <h4>Informasi Pembeli</h4>
+                <div class="input-group">
+                    <label for="namaPembeli">Nama Pembeli</label>
+                    <input type="text" id="namaPembeli" placeholder="Masukkan nama pembeli" required>
+                </div>
+
+                <h4>Data Barang</h4>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="namaBarang">Nama Barang</label>
+                        <input type="text" id="namaBarang" placeholder="Contoh: Kayu Jati" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="jumlahPenjualan">Jumlah</label>
+                        <input type="number" id="jumlahPenjualan" value="1" min="1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="hargaSatuanPenjualan">Harga Satuan (Rp)</label>
+                        <input type="number" id="hargaSatuanPenjualan" placeholder="Contoh: 15000" required>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-add" onclick="tambahBarangPenjualan()">➕ Tambah Barang</button>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3>Daftar Penjualan</h3>
+                <div class="table-wrapper">
+                    <table id="tabelPenjualan">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Barang</th>
+                                <th>Jumlah</th>
+                                <th>Harga Satuan</th>
+                                <th>Harga Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="totalHargaPenjualan">💰 Total Harga Keseluruhan: Rp 0</p>
+            </div>
+
+            <div id="formPembayaranPenjualan" class="payment-section" style="display: none;">
+                <h3 class="payment-title">Informasi Pembayaran</h3>
+                <div class="payment-input-group">
+                    <label for="totalBayarPenjualan">Jumlah Bayar (Rp)</label>
+                    <input type="number" id="totalBayarPenjualan" placeholder="Masukkan jumlah yang dibayarkan">
+                </div>
+                <div class="input-group">
+                    <label for="catatanPenjualan">Catatan (Opsional)</label>
+                    <textarea id="catatanPenjualan" rows="3" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
+                </div>
+                <div id="hasilPembayaranPenjualan" class="empty-payment">💡 Masukkan jumlah pembayaran untuk melihat status</div>
+                <div class="btn-group">
+                    <button class="btn-print" onclick="printReceiptPenjualan()">🖨️ Cetak Struk Penjualan</button>
+                    <button class="btn-clear" onclick="selesaiTransaksiPenjualan()">✅ Transaksi Selesai</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="SuratAngkutan" class="tab-content">
+            <h2>Form Pengisian Surat Angkutan Kayu Rakyat</h2>
+
+            <form id="suratForm">
+                <div class="form-section">
+                    <h2>Informasi Surat</h2>
+                    <div class="two-column">
+                        <div>
+                            <label for="nomorSurat">Nomor Surat:</label>
+                            <input type="text" id="nomorSurat" value="02/03/HD PUTRA/D/2025" required>
+                        </div>
+                        <div>
+                            <label for="masaBerlakuHari">Masa Berlaku (Hari):</label>
+                            <input type="number" id="masaBerlakuHari" value="3" required>
+                        </div>
+                    </div>
+                    <div class="two-column">
+                        <div>
+                            <label for="desa">Desa:</label>
+                            <input type="text" id="desa" value="PEKUNCEN" required>
+                        </div>
+                        <div>
+                            <label for="kabupatenKota">Kabupaten/Kota:</label>
+                            <input type="text" id="kabupatenKota" value="CILACAP" required>
+                        </div>
+                    </div>
+                    <div class="two-column">
+                        <div>
+                            <label for="kecamatan">Kecamatan:</label>
+                            <input type="text" id="kecamatan" value="KROYA" required>
+                        </div>
+                        <div>
+                            <label for="provinsi">Provinsi:</label>
+                            <input type="text" id="provinsi" value="JAWA TENGAH" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Asal Kayu</h2>
+                    <label for="buktiKepemilikan">Bukti Kepemilikan:</label>
+                    <input type="text" id="buktiKepemilikan" value="HAK MILIK" required>
+
+                    <label for="noBuktiKepemilikan">No. Bukti Kepemilikan:</label>
+                    <input type="text" id="noBuktiKepemilikan" value="HAK MILIK" required>
+
+                    <label for="namaPengirim">Nama Pengirim:</label>
+                    <input type="text" id="namaPengirim" value="GIYONO YUSUF" required>
+
+                    <label for="nikPengirim">NIK Pengirim:</label>
+                    <input type="text" id="nikPengirim" value="3301061507770007">
+
+                    <label for="alamatPengirim">Alamat Pengirim:</label>
+                    <textarea id="alamatPengirim" rows="3" required>JL. MAJAPAHIT</textarea>
+
+                    <label for="tempatMuat">Tempat Muat:</label>
+                    <input type="text" id="tempatMuat" value="PESANGGRAHAN" required>
+
+                    <label for="jenisIdentitasAsalAngku">Jenis dan Identitas Asal Angkut:</label>
+                    <input type="text" id="jenisIdentitasAsalAngku" value="" required>
+                </div>
+
+                <div class="form-section">
+                    <h2>Tujuan Pengangkutan</h2>
+                    <label for="penerima">Penerima:</label>
+                    <input type="text" id="penerima" value="" required>
+
+                    <label for="alamatPenerima">Alamat Penerima:</label>
+                    <textarea id="alamatPenerima" rows="3" required></textarea>
+                </div>
+
+                <div class="form-section">
+                    <h2>Daftar Kayu</h2>
+                    <table id="daftarKayuTable">
+                        <thead>
+                            <tr>
+                                <th>Nomor</th>
+                                <th>Jenis Kayu</th>
+                                <th>Jumlah (batang/keping/ikat)</th>
+                                <th>Volume (m³)</th>
+                                <th>Keterangan</th>
+                                <th class="no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" name="kayuNomor" value="1" readonly style="width: 50px;">
+                                </td>
+                                <td><input type="text" name="kayuJenis" value="6x12x200" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="number" name="kayuJumlah" value="10" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="text" name="kayuVolume" readonly></td>
+                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" name="kayuNomor" value="2" readonly style="width: 50px;">
+                                </td>
+                                <td><input type="text" name="kayuJenis" value="6x15x200" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="number" name="kayuJumlah" value="5" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="text" name="kayuVolume" readonly></td>
+                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" name="kayuNomor" value="3" readonly style="width: 50px;">
+                                </td>
+                                <td><input type="text" name="kayuJenis" value="2x20x200" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="number" name="kayuJumlah" value="20" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="text" name="kayuVolume" readonly></td>
+                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
+                            </tr>
+                            <tr>
+                                <td><input type="number" name="kayuNomor" value="4" readonly style="width: 50px;">
+                                </td>
+                                <td><input type="text" name="kayuJenis" value="4x25x200" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="number" name="kayuJumlah" value="8" onkeyup="calculateRowVolume(this)"
+                                        required></td>
+                                <td><input type="text" name="kayuVolume" readonly></td>
+                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" onclick="addRow()">Tambah Baris</button>
+                    <p><strong>JUMLAH:</strong> <span id="totalVolume">0</span> m³</p>
+                </div>
+
+                <div class="form-section">
+                    <h2>Catatan</h2>
+                    <label for="tglPenerbitan">Tanggal Penerbitan:</label>
+                    <input type="date" id="tglPenerbitan" required>
+
+                    <label for="penerbitSakr">Penerbit SAKR:</label>
+                    <input type="text" id="penerbitSakr" value="GIYONO YUSUF" required>
+                </div>
+
+                <div class="button-group no-print">
+                    <button type="submit">Generate & Cetak Surat</button>
+                </div>
+            </form>
+
+            <div id="print-area">
+                <div id="printedSuratContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 UD. HD Putra. Dibuat Oleh Anvikha.</p>
+    </footer>
+
+    <script>
+        // ===================================================================================
+        // JAVASCRIPT LENGKAP UNTUK APLIKASI UD. HD PUTRA
+        // ===================================================================================
+
+        // A. PENGATURAN GLOBAL & VARIABEL STATE
+        // -----------------------------------------------------------------------------------
+        let totalKeseluruhanPembelian = 0;
+        let dataPenjualan = [];
+        let totalKeseluruhanPenjualan = 0;
+
+        // B. FUNGSI UTILITAS UMUM
+        // -----------------------------------------------------------------------------------
+
+        /**
+         * Format angka menjadi format Rupiah.
+         * @param {number} angka - Angka yang akan diformat.
+         * @returns {string} - Angka dalam format Rupiah.
+         */
+        function formatRupiah(angka) {
+            return parseInt(angka).toLocaleString("id-ID");
+        }
+
+        /**
+         * Membuka tab yang dipilih dan menyembunyikan yang lain.
+         * @param {Event} evt - Event klik mouse.
+         * @param {string} tabName - Nama tab yang akan dibuka ('Pembelian', 'Penjualan', 'SuratAngkutan').
+         */
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+
+            // Sembunyikan semua tab content
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Hapus 'active' class dari semua tab buttons
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Tampilkan tab content yang spesifik
+            document.getElementById(tabName).style.display = "block";
+            // Tambahkan 'active' class ke tombol yang diklik
+            evt.currentTarget.className += " active";
+        }
+
+        /**
+         * Menyimpan state form saat ini ke dalam objek.
+         * @param {string} formId - ID dari elemen kontainer form (misal: 'Pembelian', 'Penjualan').
+         * @returns {object} - Objek berisi state form.
+         */
+        function saveFormState(formId) {
+            const formElements = document.querySelectorAll(`#${formId} input, #${formId} select, #${formId} textarea`);
+            const state = {};
+            formElements.forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    state[el.id] = el.checked;
+                } else {
+                    state[el.id] = el.value;
+                }
+            });
+            return state;
+        }
+
+        /**
+         * Mengembalikan state form dari objek yang disimpan.
+         * @param {string} formId - ID dari elemen kontainer form.
+         * @param {object} state - Objek state form yang akan dipulihkan.
+         */
+        function restoreFormState(formId, state) {
+            const formElements = document.querySelectorAll(`#${formId} input, #${formId} select, #${formId} textarea`);
+            formElements.forEach(el => {
+                if (state.hasOwnProperty(el.id)) {
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = state[el.id];
+                    } else {
+                        el.value = state[el.id];
+                    }
+                    // Trigger input events for elements that have them (e.g., totalBayar)
+                    if (el.oninput) {
+                        el.oninput();
+                    }
+                }
+            });
+        }
+
+        /**
+         * Menambahkan efek riak (ripple effect) pada tombol yang diklik.
+         * @param {Event} e - Event klik mouse.
+         */
+        function createRipple(e) {
+            const button = e.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${e.clientX - (button.getBoundingClientRect().left + radius)}px`;
+            circle.style.top = `${e.clientY - (button.getBoundingClientRect().top + radius)}px`;
+            circle.classList.add('ripple');
+
+            const ripple = button.getElementsByClassName('ripple')[0];
+
+            if (ripple) {
+                ripple.remove();
+            }
+
+            button.appendChild(circle);
+        }
+
+        // C. LOGIKA TAB PEMBELIAN
+        // -----------------------------------------------------------------------------------
+
+        function updateTotalHargaPembelian() {
+            const tbody = document.querySelector("#tabelKayu tbody");
+            const rows = tbody.querySelectorAll("tr");
+
+            if (rows.length === 0) {
+                totalKeseluruhanPembelian = 0;
+            }
+
+            document.getElementById("totalHarga").textContent =
+                "💰 Total Harga Keseluruhan: Rp " + formatRupiah(totalKeseluruhanPembelian);
+
+            if (totalKeseluruhanPembelian > 0) {
+                document.getElementById("formPembayaran").style.display = "block";
+                hitungPembayaranPembelian(); // Update payment calculation when total changes
+            } else {
+                document.getElementById("formPembayaran").style.display = "none";
+            }
+        }
+
+        function hitungPembayaranPembelian() {
+            const bayar = parseFloat(document.getElementById("totalBayar").value);
+            const hasilDiv = document.getElementById("hasilPembayaran");
+
+            hasilDiv.className = ""; // Clear previous classes
+
+            if (isNaN(bayar) || bayar === 0) {
+                hasilDiv.textContent = "Masukkan jumlah pembayaran untuk melihat status";
+                hasilDiv.classList.add("empty-payment");
+            } else if (bayar >= totalKeseluruhanPembelian) { // Changed to >= for LUNAS/Kembalian
+                const kembalian = bayar - totalKeseluruhanPembelian;
+                hasilDiv.textContent = `✅ LUNAS - Kembalian: Rp ${formatRupiah(kembalian)}`;
+                hasilDiv.classList.add("lunas");
+            } else {
+                const kasbon = totalKeseluruhanPembelian - bayar;
+                hasilDiv.textContent = `📋 KASBON: Rp ${formatRupiah(kasbon)}`;
+                hasilDiv.classList.add("kasbon");
+            }
+        }
+
+        /**
+         * Mereset seluruh form pembelian, termasuk tabel dan total.
+         */
+        function resetFormPembelianLengkap() {
+            document.querySelector("#tabelKayu tbody").innerHTML = '';
+            totalKeseluruhanPembelian = 0;
+            document.getElementById("namaPenjual").value = "";
+            document.getElementById("jenisKayu").value = "Jati"; // Reset dropdown
+            document.getElementById("diameter").value = "";
+            document.getElementById("panjang").value = "";
+            document.getElementById("hargaSatuan").value = "";
+            document.getElementById("jumlah").value = "1";
+            document.getElementById("totalHarga").textContent = "💰 Total Harga Keseluruhan: Rp 0";
+            document.getElementById("totalBayar").value = "";
+            document.getElementById("catatan").value = "";
+            const hasilDiv = document.getElementById("hasilPembayaran");
+            hasilDiv.textContent = "💡 Masukkan jumlah pembayaran untuk melihat status";
+            hasilDiv.className = "empty-payment";
+            document.getElementById("formPembayaran").style.display = "none";
+        }
+
+        function updateNomorUrutPembelian() {
+            const tbody = document.querySelector("#tabelKayu tbody");
+            const rows = tbody.querySelectorAll("tr");
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+
+        function tambahKayu() {
+            const jenis = document.getElementById("jenisKayu").value;
+            const diameter = parseFloat(document.getElementById("diameter").value);
+            const panjang = parseFloat(document.getElementById("panjang").value);
+            const hargaSatuan = parseFloat(document.getElementById("hargaSatuan").value);
+            const jumlahBatang = parseInt(document.getElementById("jumlah").value);
+
+            if (!diameter || !panjang || isNaN(hargaSatuan) || isNaN(jumlahBatang) || jumlahBatang <= 0) {
+                alert("Isi semua data kayu (Diameter, Panjang, Harga Satuan, Jumlah Batang) dengan angka yang valid!");
+                return;
+            }
+
+            const volumeM3 = (diameter ** 2 * 785 * panjang) / 1000000;
+            const hargaTotalPerBatang = volumeM3 * hargaSatuan;
+            const hargaTotalUntukEntry = hargaTotalPerBatang * jumlahBatang;
+
+            const tbody = document.querySelector("#tabelKayu tbody");
+            const rows = tbody.querySelectorAll("tr");
+            let found = false;
+
+            // Coba temukan item yang sudah ada untuk diperbarui
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const existingJenis = row.cells[1].textContent;
+                const existingDiameter = parseFloat(row.cells[2].textContent);
+                const existingPanjang = parseFloat(row.cells[3].textContent);
+
+                if (existingJenis === jenis && existingDiameter === diameter && existingPanjang === panjang) {
+                    found = true;
+                    let existingJumlah = parseInt(row.cells[4].textContent);
+                    let existingHargaTotalText = row.cells[5].textContent.replace('Rp ', '').replace(/\./g, '');
+                    let existingHargaTotal = parseFloat(existingHargaTotalText);
+
+                    totalKeseluruhanPembelian -= existingHargaTotal; // Kurangi total lama
+
+                    existingJumlah += jumlahBatang;
+                    const newHargaTotalForRow = hargaTotalPerBatang * existingJumlah;
+
+                    row.cells[4].textContent = existingJumlah;
+                    row.cells[5].textContent = `Rp ${formatRupiah(newHargaTotalForRow)}`;
+
+                    totalKeseluruhanPembelian += newHargaTotalForRow; // Tambahkan total baru
+                    break;
+                }
+            }
+
+            // Jika tidak ditemukan, tambahkan baris baru
+            if (!found) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+            <td></td>
+            <td>${jenis}</td>
+            <td>${diameter}</td>
+            <td>${panjang}</td>
+            <td>${jumlahBatang}</td>
+            <td>Rp ${formatRupiah(hargaTotalUntukEntry)}</td>
+            <td><button class="btn-delete" onclick="hapusBarisPembelian(this)">❌ Hapus</button></td>
+        `;
+                totalKeseluruhanPembelian += hargaTotalUntukEntry;
+            }
+
+            updateTotalHargaPembelian();
+            updateNomorUrutPembelian();
+
+            // Clear item-specific form inputs
+            document.getElementById("diameter").value = "";
+            document.getElementById("panjang").value = "";
+            document.getElementById("hargaSatuan").value = "";
+            document.getElementById("jumlah").value = "1";
+            document.getElementById("jenisKayu").focus(); // Set focus back to jenis kayu
+        }
+
+        function hapusBarisPembelian(btn) {
+            const row = btn.parentElement.parentElement;
+            const hargaOnRowText = row.cells[5].textContent.replace('Rp ', '').replace(/\./g, '');
+            const hargaOnRow = parseFloat(hargaOnRowText);
+
+            document.getElementById("tabelKayu").deleteRow(row.rowIndex);
+            totalKeseluruhanPembelian -= hargaOnRow;
+            updateTotalHargaPembelian();
+            updateNomorUrutPembelian();
+        }
+
+        /**
+         * Fungsi untuk mencetak struk pembelian dalam format PDF dan langsung membuka dialog cetak.
+         */
+        function printReceiptPembelian() {
+            const { jspdf } = window;
+            const { jsPDF } = jspdf;
+            const doc = new jsPDF();
+
+            let y = 10;
+            const margin = 10;
+            const lineHeight = 7;
+
+            // Header Struk
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("UD. HD PUTRA", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Penggergaji Kayu", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(10);
+            doc.text("Pesanggrahan RT 10/04 KROYA", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.text("Telp: 082133843394", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight * 2;
+
+            // Garis pemisah
+            doc.setLineWidth(0.5);
+            doc.line(margin, y, doc.internal.pageSize.width - margin, y);
+            y += lineHeight;
+
+            // Informasi Penjual
+            doc.setFontSize(10);
+            const namaPenjual = document.getElementById("namaPenjual").value.trim();
+            doc.text(`Nama Penjual: ${namaPenjual || '-'}`, margin, y);
+            y += lineHeight;
+            doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, margin, y);
+            y += lineHeight * 2;
+
+            // Tabel data
+            const tableData = [];
+            const tableRows = document.querySelectorAll("#tabelKayu tbody tr");
+            if (tableRows.length === 0) {
+                alert("Tidak ada data pembelian untuk dicetak.");
+                return;
+            }
+
+            tableRows.forEach(row => {
+                const rowData = [];
+                rowData.push(row.cells[0].textContent); // No
+                rowData.push(row.cells[1].textContent); // Jenis Kayu
+                rowData.push(row.cells[2].textContent); // Diameter (cm)
+                rowData.push(row.cells[3].textContent); // Panjang (cm)
+                rowData.push(row.cells[4].textContent); // Jumlah Batang
+                rowData.push(row.cells[5].textContent); // Harga Total
+                tableData.push(rowData);
+            });
+
+            doc.autoTable({
+                startY: y,
+                head: [['No', 'Jenis Kayu', 'Diameter (cm)', 'Panjang (cm)', 'Jumlah Batang', 'Harga Total']],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+                headStyles: { fillColor: [52, 152, 219], textColor: [255, 255, 255], fontStyle: 'bold' },
+                didDrawPage: function (data) {
+                    y = data.cursor.y + lineHeight;
+                }
+            });
+
+            y = doc.autoTable.previous.finalY + lineHeight;
+
+            // Informasi Pembayaran (Detail)
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Total Keseluruhan: ${document.getElementById("totalHarga").textContent.replace('💰 Total Harga Keseluruhan: ', '')}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+            doc.text(`Jumlah Bayar: Rp ${formatRupiah(parseFloat(document.getElementById("totalBayar").value) || 0)}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+
+            const bayar = parseFloat(document.getElementById("totalBayar").value) || 0;
+            let rincianStatus = "";
+            if (bayar >= totalKeseluruhanPembelian) {
+                const kembalian = bayar - totalKeseluruhanPembelian;
+                rincianStatus = `Kembalian: Rp ${formatRupiah(kembalian)}`;
+            } else {
+                const kasbon = totalKeseluruhanPembelian - bayar;
+                rincianStatus = `Kasbon: -Rp ${formatRupiah(kasbon)}`; // Kasbon dengan tanda minus
+            }
+            doc.text(rincianStatus, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+            // --- Baris "Status Pembayaran" dihilangkan di sini ---
+            // doc.setFontSize(10);
+            // doc.setFont("helvetica", "normal");
+            // doc.text(`Status Pembayaran: ${document.getElementById("hasilPembayaran").textContent}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            // y += lineHeight;
+
+            // Catatan (dibawah rincian kembalian/kasbon)
+            const catatanPembelian = document.getElementById("catatan").value.trim();
+            if (catatanPembelian) {
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Catatan: ${catatanPembelian}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+                y += lineHeight;
+            }
+            y += lineHeight * 2;
+
+            // Tanda Terima dan Hormat Kami
+            doc.setFontSize(10);
+            const thirdWidth = doc.internal.pageSize.width / 3;
+
+            doc.text("Tanda Terima,", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("Hormat Kami,", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+            y += lineHeight * 4;
+            doc.text("____________________", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("____________________", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(8);
+            doc.text("(Nama Jelas & Tanda Tangan)", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("(Nama Jelas & Tanda Tangan)", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+
+            // Footer Struk
+            y = doc.internal.pageSize.height - 10;
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "italic");
+            doc.text("Terima kasih telah berbelanja di UD. HD Putra.", doc.internal.pageSize.width / 2, y, { align: 'center' });
+
+            // Directly open print dialog
+            doc.autoPrint();
+            window.open(doc.output('bloburl'), '_blank');
+        }
+
+
+        // D. LOGIKA TAB PENJUALAN
+        // -----------------------------------------------------------------------------------
+
+        function tambahBarangPenjualan() {
+            const nama = document.getElementById("namaBarang").value.trim();
+            const jumlah = parseInt(document.getElementById("jumlahPenjualan").value);
+            const hargaSatuan = parseFloat(document.getElementById("hargaSatuanPenjualan").value);
+
+            if (!nama || isNaN(jumlah) || jumlah <= 0 || isNaN(hargaSatuan) || hargaSatuan <= 0) {
+                alert("Isi semua data penjualan (Nama Barang, Jumlah, Harga Satuan) dengan benar!");
+                return;
+            }
+
+            const hargaTotal = jumlah * hargaSatuan;
+            dataPenjualan.push({ id: Date.now(), nama, jumlah, hargaSatuan, hargaTotal });
+            updateTabelPenjualan();
+
+            // Reset item-specific inputs after adding
+            document.getElementById("namaBarang").value = "";
+            document.getElementById("hargaSatuanPenjualan").value = "";
+            document.getElementById("jumlahPenjualan").value = "1";
+            document.getElementById("namaBarang").focus();
+        }
+
+        function updateTabelPenjualan() {
+            const tbody = document.querySelector("#tabelPenjualan tbody");
+            tbody.innerHTML = "";
+            totalKeseluruhanPenjualan = 0;
+
+            dataPenjualan.forEach((item, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.nama}</td>
+            <td>${item.jumlah}</td>
+            <td>Rp ${formatRupiah(item.hargaSatuan)}</td>
+            <td>Rp ${formatRupiah(item.hargaTotal)}</td>
+            <td><button class="btn-delete" onclick="hapusItemPenjualan(${item.id})">❌ Hapus</button></td>
+        `;
+                totalKeseluruhanPenjualan += item.hargaTotal;
+            });
+
+            document.getElementById("totalHargaPenjualan").textContent = `💰 Total Harga Keseluruhan: Rp ${formatRupiah(totalKeseluruhanPenjualan)}`;
+            document.getElementById("formPembayaranPenjualan").style.display = totalKeseluruhanPenjualan > 0 ? 'block' : 'none';
+            hitungPembayaranPenjualan();
+        }
+
+        function hitungPembayaranPenjualan() {
+            const bayar = parseFloat(document.getElementById("totalBayarPenjualan").value) || 0;
+            const hasilDiv = document.getElementById("hasilPembayaranPenjualan");
+            hasilDiv.className = "";
+
+            if (totalKeseluruhanPenjualan === 0) {
+                hasilDiv.textContent = "Tambahkan barang terlebih dahulu.";
+                hasilDiv.classList.add("empty-payment");
+            } else if (isNaN(bayar) || bayar === 0) {
+                hasilDiv.textContent = "Masukkan jumlah pembayaran untuk melihat status";
+                hasilDiv.classList.add("empty-payment");
+            } else if (bayar >= totalKeseluruhanPenjualan) {
+                const kembalian = bayar - totalKeseluruhanPenjualan;
+                hasilDiv.textContent = `LUNAS - Kembalian: Rp ${formatRupiah(kembalian)}`;
+                hasilDiv.classList.add("lunas");
+            } else {
+                const kasbon = totalKeseluruhanPenjualan - bayar;
+                hasilDiv.textContent = `KASBON: Rp ${formatRupiah(kasbon)}`;
+                hasilDiv.classList.add("kasbon");
+            }
+        }
+
+        function hapusItemPenjualan(id) {
+            dataPenjualan = dataPenjualan.filter(item => item.id !== id);
+            updateTabelPenjualan();
+        }
+
+        /**
+         * Mereset seluruh form penjualan, termasuk tabel dan total.
+         */
+        function resetFormPenjualanLengkap() {
+            dataPenjualan = [];
+            totalKeseluruhanPenjualan = 0;
+            document.getElementById('namaPembeli').value = '';
+            document.getElementById("namaBarang").value = "";
+            document.getElementById("hargaSatuanPenjualan").value = "";
+            document.getElementById("jumlahPenjualan").value = "1";
+            document.getElementById('totalBayarPenjualan').value = '';
+            document.getElementById('catatanPenjualan').value = '';
+            document.getElementById("totalHargaPenjualan").textContent = `💰 Total Harga Keseluruhan: Rp 0`;
+            document.getElementById("formPembayaranPenjualan").style.display = 'none';
+            const tbody = document.querySelector("#tabelPenjualan tbody");
+            tbody.innerHTML = "";
+            const hasilDiv = document.getElementById("hasilPembayaranPenjualan");
+            hasilDiv.textContent = "💡 Masukkan jumlah pembayaran untuk melihat status";
+            hasilDiv.className = "empty-payment";
+        }
+
+        /**
+         * Fungsi untuk mencetak struk penjualan dalam format PDF dan langsung membuka dialog cetak.
+         */
+        function printReceiptPenjualan() {
+            const { jspdf } = window;
+            const { jsPDF } = jspdf;
+            const doc = new jsPDF();
+
+            let y = 10;
+            const margin = 10;
+            const lineHeight = 7;
+
+            // Header Struk
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("UD. HD PUTRA", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Penggergaji Kayu", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(10);
+            doc.text("Pesanggrahan RT 10/04 KROYA", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.text("Telp: 082133843394", doc.internal.pageSize.width / 2, y, { align: 'center' });
+            y += lineHeight * 2;
+
+            // Garis pemisah
+            doc.setLineWidth(0.5);
+            doc.line(margin, y, doc.internal.pageSize.width - margin, y);
+            y += lineHeight;
+
+            // Informasi Pembeli
+            doc.setFontSize(10);
+            const namaPembeli = document.getElementById("namaPembeli").value.trim();
+            doc.text(`Nama Pembeli: ${namaPembeli || '-'}`, margin, y);
+            y += lineHeight;
+            doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, margin, y);
+            y += lineHeight * 2;
+
+            // Tabel data
+            const tableDataPenjualan = [];
+            const tableRowsPenjualan = document.querySelectorAll("#tabelPenjualan tbody tr");
+            if (tableRowsPenjualan.length === 0) {
+                alert("Tidak ada data penjualan untuk dicetak.");
+                return;
+            }
+
+            tableRowsPenjualan.forEach(row => {
+                const rowData = [];
+                rowData.push(row.cells[0].textContent); // No
+                rowData.push(row.cells[1].textContent); // Nama Barang
+                rowData.push(row.cells[2].textContent); // Jumlah
+                rowData.push(row.cells[3].textContent); // Harga Satuan
+                rowData.push(row.cells[4].textContent); // Harga Total
+                tableDataPenjualan.push(rowData);
+            });
+
+            doc.autoTable({
+                startY: y,
+                head: [['No', 'Nama Barang', 'Jumlah', 'Harga Satuan', 'Harga Total']],
+                body: tableDataPenjualan,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+                headStyles: { fillColor: [52, 152, 219], textColor: [255, 255, 255], fontStyle: 'bold' },
+                didDrawPage: function (data) {
+                    y = data.cursor.y + lineHeight;
+                }
+            });
+
+            y = doc.autoTable.previous.finalY + lineHeight;
+
+            // Informasi Pembayaran (Detail)
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Total Keseluruhan: ${document.getElementById("totalHargaPenjualan").textContent.replace('💰 Total Harga Keseluruhan: ', '')}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+            doc.text(`Jumlah Bayar: Rp ${formatRupiah(parseFloat(document.getElementById("totalBayarPenjualan").value) || 0)}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+
+            const bayarPenjualan = parseFloat(document.getElementById("totalBayarPenjualan").value) || 0;
+            let rincianStatusPenjualan = "";
+            if (bayarPenjualan >= totalKeseluruhanPenjualan) {
+                const kembalianPenjualan = bayarPenjualan - totalKeseluruhanPenjualan;
+                rincianStatusPenjualan = `Kembalian: Rp ${formatRupiah(kembalianPenjualan)}`;
+            } else {
+                const kasbonPenjualan = totalKeseluruhanPenjualan - bayarPenjualan;
+                rincianStatusPenjualan = `Kasbon: -Rp ${formatRupiah(kasbonPenjualan)}`; // Kasbon dengan tanda minus
+            }
+            doc.text(rincianStatusPenjualan, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            y += lineHeight;
+            // --- Baris "Status Pembayaran" dihilangkan di sini ---
+            // doc.setFontSize(10);
+            // doc.setFont("helvetica", "normal");
+            // doc.text(`Status Pembayaran: ${document.getElementById("hasilPembayaranPenjualan").textContent}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+            // y += lineHeight;
+
+            // Catatan (dibawah rincian kembalian/kasbon)
+            const catatanPenjualan = document.getElementById("catatanPenjualan").value.trim();
+            if (catatanPenjualan) {
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Catatan: ${catatanPenjualan}`, doc.internal.pageSize.width - margin, y, { align: 'right' });
+                y += lineHeight;
+            }
+            y += lineHeight * 2;
+
+            // Tanda Terima dan Hormat Kami
+            doc.setFontSize(10);
+            const thirdWidth = doc.internal.pageSize.width / 3;
+
+            doc.text("Tanda Terima,", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("Hormat Kami,", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+            y += lineHeight * 4;
+            doc.text("____________________", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("____________________", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+            y += lineHeight;
+            doc.setFontSize(8);
+            doc.text("(Nama Jelas & Tanda Tangan)", margin + thirdWidth / 2, y, { align: 'center' });
+            doc.text("(Nama Jelas & Tanda Tangan)", doc.internal.pageSize.width - margin - thirdWidth / 2, y, { align: 'center' });
+
+            // Footer Struk
+            y = doc.internal.pageSize.height - 10;
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "italic");
+            doc.text("Terima kasih telah berbelanja di UD. HD Putra.", doc.internal.pageSize.width / 2, y, { align: 'center' });
+
+            // Directly open print dialog
+            doc.autoPrint();
+            window.open(doc.output('bloburl'), '_blank');
+        }
+
+        // Helper function for kasbon/kembalian formatting (this function is no longer explicitly used after changes)
+        // but keeping it here for completeness if other parts of the code might use it.
+        function formatRincian(nilai) {
+            if (nilai === 0) {
+                return "Rp 0";
+            } else {
+                return `${formatRupiah(nilai)}`;
+            }
+        }
+
+
+        // NEW: Functions to handle "Transaksi Selesai"
+        function selesaiTransaksiPembelian() {
+            if (confirm("Apakah Anda yakin ingin menyelesaikan transaksi pembelian ini dan mereset form?")) {
+                resetFormPembelianLengkap();
+                alert("Transaksi pembelian selesai dan form direset.");
+            }
+        }
+
+        function selesaiTransaksiPenjualan() {
+            if (confirm("Apakah Anda yakin ingin menyelesaikan transaksi penjualan ini dan mereset form?")) {
+                resetFormPenjualanLengkap();
+                alert("Transaksi penjualan selesai dan form direset.");
+            }
+        }
+
+
+        // E. INISIALISASI & EVENT LISTENERS
+        // -----------------------------------------------------------------------------------
+
+        // Define standard volume per piece for common wood types (in m³)
+        // You'll need to expand this based on your actual wood dimensions.
+        // Format: "PxLxT" where P=Panjang, L=Lebar, T=Tinggi (in cm for convenience, then converted to meters for calculation)
+        const woodDimensions = {
+            "6x12x200": { p: 200, l: 6, t: 12 }, // Assuming 200cm length, 6cm width, 12cm thickness
+            "6x15x200": { p: 200, l: 6, t: 15 },
+            "2x20x200": { p: 200, l: 2, t: 20 },
+            "4x25x200": { p: 200, l: 4, t: 25 },
+            // Add more wood types as needed
+            // Example for different units or custom calculation:
+            // "Papan Jati Besar": { customVolumePerPiece: 0.05 }, // m³ per keping
+            // "Balok Meranti": { customVolumePerPiece: 0.12 }, // m³ per batang
+        };
+
+        // Function to parse dimensions from a string like "6x12x200" and calculate volume
+        function calculateVolumeFromDimensions(dimString, count) {
+            const dim = woodDimensions[dimString.toLowerCase()]; // Case-insensitive lookup
+            if (dim && dim.p && dim.l && dim.t) {
+                // Convert cm to meters for calculation
+                const volumePerPiece = (dim.p / 100) * (dim.l / 100) * (dim.t / 100);
+                return (volumePerPiece * count).toFixed(3); // Round to 3 decimal places
+            } else if (dim && dim.customVolumePerPiece) {
+                return (dim.customVolumePerPiece * count).toFixed(3);
+            }
+            return 0; // Return 0 if dimensions are not found or invalid
+        }
+
+        function calculateRowVolume(element) {
+            const row = element.closest('tr');
+            const jenisKayuInput = row.querySelector('[name="kayuJenis"]');
+            const jumlahInput = row.querySelector('[name="kayuJumlah"]');
+            const volumeInput = row.querySelector('[name="kayuVolume"]');
+
+            const jenisKayu = jenisKayuInput.value.trim();
+            const jumlah = parseInt(jumlahInput.value) || 0;
+
+            let calculatedVolume = 0;
+            if (jenisKayu && jumlah > 0) {
+                calculatedVolume = calculateVolumeFromDimensions(jenisKayu, jumlah);
+            }
+
+            volumeInput.value = parseFloat(calculatedVolume); // Ensure it's a number and remove trailing zeros
+
+            updateTotalVolume();
+        }
+
+        document.getElementById('suratForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Ambil nilai dari form
+            const nomorSurat = document.getElementById('nomorSurat').value;
+            const masaBerlakuHari = parseInt(document.getElementById('masaBerlakuHari').value);
+            const desa = document.getElementById('desa').value;
+            const kecamatan = document.getElementById('kecamatan').value;
+            const kabupatenKota = document.getElementById('kabupatenKota').value;
+            const provinsi = document.getElementById('provinsi').value;
+            const buktiKepemilikan = document.getElementById('buktiKepemilikan').value;
+            const noBuktiKepemilikan = document.getElementById('noBuktiKepemilikan').value;
+            const namaPengirim = document.getElementById('namaPengirim').value;
+            const nikPengirim = document.getElementById('nikPengirim').value;
+            const alamatPengirim = document.getElementById('alamatPengirim').value;
+            const tempatMuat = document.getElementById('tempatMuat').value;
+            const jenisIdentitasAsalAngku = document.getElementById('jenisIdentitasAsalAngku').value;
+            const penerima = document.getElementById('penerima').value;
+            const alamatPenerima = document.getElementById('alamatPenerima').value;
+            const tglPenerbitanStr = document.getElementById('tglPenerbitan').value;
+            const penerbitSakr = document.getElementById('penerbitSakr').value;
+
+            // Hitung tanggal mulai dan selesai
+            const tglPenerbitan = new Date(tglPenerbitanStr + 'T00:00:00');
+            const tglMulai = new Date(tglPenerbitan);
+            const tglSelesai = new Date(tglPenerbitan);
+            tglSelesai.setDate(tglPenerbitan.getDate() + masaBerlakuHari - 1);
+
+            const formatTanggalDDMMYYYY = (date) => {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            };
+
+            const formatTanggalPrint = (date) => {
+                const day = String(date.getDate()).padStart(2, '0');
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                const month = months[date.getMonth()];
+                const year = date.getFullYear();
+                return `${day} ${month} ${year}`;
+            };
+
+            // Buat tabel kayu
+            let daftarKayuTableHTML = `
+                <table id="printDaftarKayuTable">
+                    <thead>
+                        <tr>
+                            <th>Nomor</th>
+                            <th>Jenis<br>Kayu</th>
+                            <th>Jumlah<br>(batang/keping/ikat)</th>
+                            <th>Volume<br>(m³)</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            let totalVolume = 0;
+            const rows = document.querySelectorAll('#daftarKayuTable tbody tr');
+            rows.forEach(row => {
+                const nomor = row.querySelector('[name="kayuNomor"]').value;
+                const jenis = row.querySelector('[name="kayuJenis"]').value;
+                const jumlah = row.querySelector('[name="kayuJumlah"]').value;
+                const volume = parseFloat(row.querySelector('[name="kayuVolume"]').value) || 0;
+                const keterangan = row.querySelector('[name="kayuKeterangan"]').value;
+
+                totalVolume += volume;
+
+                daftarKayuTableHTML += `
+                    <tr>
+                        <td>${nomor}</td>
+                        <td>${jenis}</td>
+                        <td>${jumlah}</td>
+                        <td>${volume > 0 ? parseFloat(volume.toFixed(3)) : ''}</td>
+                        <td>${keterangan}</td>
+                    </tr>
+                `;
+            });
+
+            daftarKayuTableHTML += `
+                    <tr style="font-weight: bold;">
+                        <td colspan="3">JUMLAH</td>
+                        <td>${parseFloat(totalVolume.toFixed(3))}</td>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            `;
+
+            // Bangun konten surat sesuai format foto dengan titik dua sejajar
+            const suratContent = `
+                <div class="surat-header">
+                    <h3 style="margin: 0 auto; text-decoration: underline; text-align: center;">SURAT ANGKUTAN KAYU RAKYAT</h3>
+                    <p style="margin: 5px 0; text-align: center;">(berlaku sebagai Deklarasi Hasil Hutan)</p>
+                </div>
+
+
+                <div style="margin-bottom: 12px;">
+                    <strong>Nomor: ${nomorSurat}</strong>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-left">
+                        <div class="aligned-field">
+                            <span class="field-label">Desa</span>
+                            <span class="field-colon">:</span>
+                            <span class="field-value">${desa}</span>
+                        </div>
+                        <div class="aligned-field">
+                            <span class="field-label">Kecamatan</span>
+                            <span class="field-colon">:</span>
+                            <span class="field-value">${kecamatan}</span>
+                        </div>
+                    </div>
+                    <div class="info-right">
+                        <div class="aligned-field-right">
+                            <span class="field-label-right">Kabupaten/Kota</span>
+                            <span class="field-colon">:</span>
+                            <span class="field-value">${kabupatenKota}</span>
+                        </div>
+                        <div class="aligned-field-right">
+                            <span class="field-label-right">Provinsi</span>
+                            <span class="field-colon">:</span>
+                            <span class="field-value">${provinsi}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px;">
+                    <div class="info-row">
+                        <div class="info-left">
+                            <div class="section-title">ASAL KAYU</div>
+                            <div class="aligned-field">
+                                <span class="field-label">Bukti kepemilikan*)</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${buktiKepemilikan}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">No. bukti kepemilikan</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${noBuktiKepemilikan}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">Nama Pengirim</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${namaPengirim}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">NIK Pengirim</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${nikPengirim || '.............................'}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">Alamat pengirim</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${alamatPengirim}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">Tempat muat</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${tempatMuat}</span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">Jenis dan identitas</span>
+                                <span class="field-colon"></span>
+                                <span class="field-value"></span>
+                            </div>
+                            <div class="aligned-field">
+                                <span class="field-label">asal angkut</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${jenisIdentitasAsalAngku}</span>
+                            </div>
+                        </div>
+                        <div class="info-right">
+                            <div class="section-title">TUJUAN PENGANGKUTAN</div>
+                            <div class="aligned-field-right">
+                                <span class="field-label-right">Penerima</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${penerima}</span>
+                            </div>
+                            <div class="aligned-field-right">
+                                <span class="field-label-right">Alamat penerima</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${alamatPenerima}</span>
+                            </div>
+                            <br>
+                            <div class="section-title">MASA BERLAKU</div>
+                            <div class="aligned-field-right">
+                                <span class="field-label-right">selama</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${masaBerlakuHari} (${masaBerlakuHari === 3 ? 'TIGA' : masaBerlakuHari}) hari</span>
+                            </div>
+                            <div class="aligned-field-right">
+                                <span class="field-label-right">dari tanggal</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${formatTanggalDDMMYYYY(tglMulai)}</span>
+                            </div>
+                            <div class="aligned-field-right">
+                                <span class="field-label-right">sampai tanggal</span>
+                                <span class="field-colon">:</span>
+                                <span class="field-value">${formatTanggalDDMMYYYY(tglSelesai)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${daftarKayuTableHTML}
+
+                <div class="notes-section">
+                    <div><strong>Catatan :</strong></div>
+                    <div>*) dari bukti pemilikan/penguasaan sesuai ketentuan</div>
+                    <div>&nbsp;&nbsp;&nbsp;Kementerian ATR/BPN</div>
+                    <div>*) untuk pengangkutan lanjutan diisi nomor dan tanggal</div>
+                    <div>&nbsp;&nbsp;&nbsp;SAKR sebelumnya</div>
+                </div>
+
+                <div class="signature-section">
+                    <div style="margin-bottom: 8px;">${formatTanggalPrint(new Date(tglPenerbitanStr))}</div>
+                    <div style="margin-bottom: 50px;">Penerbit SAKR.</div>
+                    <div><strong>${penerbitSakr}</strong></div>
+                </div>
+            `;
+
+            document.getElementById('printedSuratContainer').innerHTML = suratContent;
+            document.getElementById('print-area').style.display = 'block';
+
+            // Panggil fungsi cetak browser
+            window.print();
+        });
+
+        function addRow() {
+            const tableBody = document.querySelector('#daftarKayuTable tbody');
+            const newRow = tableBody.insertRow();
+            const rowCount = tableBody.rows.length;
+
+            newRow.innerHTML = `
+                <td><input type="number" name="kayuNomor" value="${rowCount + 1}" readonly style="width: 50px;"></td>
+                <td><input type="text" name="kayuJenis" onkeyup="calculateRowVolume(this)" required></td>
+                <td><input type="number" name="kayuJumlah" onkeyup="calculateRowVolume(this)"></td>
+                <td><input type="text" name="kayuVolume" readonly></td>
+                <td><input type="text" name="kayuKeterangan"></td>
+                <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
+            `;
+            updateTotalVolume();
+        }
+
+        function removeRow(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            updateTotalVolume();
+            updateRowNumbers();
+        }
+
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('#daftarKayuTable tbody tr');
+            rows.forEach((row, index) => {
+                row.querySelector('[name="kayuNomor"]').value = index + 1;
+            });
+        }
+
+        function updateTotalVolume() {
+            let total = 0;
+            const volumeInputs = document.querySelectorAll('#daftarKayuTable tbody input[name="kayuVolume"]');
+            volumeInputs.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            // Changed from toFixed(3) to parseFloat(toFixed(3)) to remove trailing zeros
+            document.getElementById('totalVolume').textContent = parseFloat(total.toFixed(3));
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Otomatis buka tab pertama saat halaman dimuat
+            const defaultTabButton = document.querySelector('.tab-btn');
+            if (defaultTabButton) {
+                defaultTabButton.click();
+            }
+
+            // Initialize total and payment forms visibility
+            updateTabelPenjualan();
+            updateTotalHargaPembelian();
+
+            // Add ripple effect to all buttons
+            document.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', createRipple);
+            });
+
+            // Add event listener for totalBayar input on Pembelian tab
+            document.getElementById("totalBayar").addEventListener("input", hitungPembayaranPembelian);
+
+            // Add event listener for totalBayarPenjualan input on Penjualan tab
+            document.getElementById("totalBayarPenjualan").addEventListener("input", hitungPembayaranPenjualan);
+
+            // Set current date for Tanggal Penerbitan in Surat Angkutan tab
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('tglPenerbitan').value = `${year}-${month}-${day}`;
+
+            // Calculate initial volumes on page load for existing rows in Surat Angkutan tab
+            document.querySelectorAll('#daftarKayuTable tbody tr').forEach(row => {
+                calculateRowVolume(row.querySelector('[name="kayuJumlah"]'));
+            });
+            updateTotalVolume();
+        });
+    </script>
+</body>
+</html>
