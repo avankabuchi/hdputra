@@ -1236,8 +1236,8 @@
         }
 
         .surat-content {
-            font-size: 10px;
-            line-height: 1.3;
+            font-size: 12px; /* Diperbesar dari 10px */
+            line-height: 1.4;  /* Disesuaikan */
         }
 
         .info-row {
@@ -1298,7 +1298,7 @@
             width: 100%;
             border-collapse: collapse;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 9px;
+            font-size: 11px; /* Diperbesar dari 9px */
             margin: 12px 0;
         }
 
@@ -1381,9 +1381,9 @@
                 margin: 0;
                 padding: 15mm;
                 /* Padding ini menjadi margin konten di dalam A4 */
-                font-size: 10px;
-                line-height: 1.2;
-                border: 2px solid #000;
+                font-size: 12px; /* Diperbesar dari 10px */
+                line-height: 1.4; /* Disesuaikan dari 1.2 */
+                border: none; /* Garis tepi dihilangkan */
                 box-sizing: border-box;
                 page-break-inside: avoid;
                 /* Membantu menjaga konten tetap bersama */
@@ -1660,7 +1660,7 @@
                                 <td><input type="number" name="kayuJumlah" value="10" onkeyup="calculateRowVolume(this)"
                                         required></td>
                                 <td><input type="text" name="kayuVolume" readonly></td>
-                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td><input type="text" name="kayuKeterangan" value="Kayu Rakyat"></td>
                                 <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
                             </tr>
                             <tr>
@@ -1671,7 +1671,7 @@
                                 <td><input type="number" name="kayuJumlah" value="5" onkeyup="calculateRowVolume(this)"
                                         required></td>
                                 <td><input type="text" name="kayuVolume" readonly></td>
-                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td><input type="text" name="kayuKeterangan" value="Kayu Rakyat"></td>
                                 <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
                             </tr>
                             <tr>
@@ -1682,7 +1682,7 @@
                                 <td><input type="number" name="kayuJumlah" value="20" onkeyup="calculateRowVolume(this)"
                                         required></td>
                                 <td><input type="text" name="kayuVolume" readonly></td>
-                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td><input type="text" name="kayuKeterangan" value="Kayu Rakyat"></td>
                                 <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
                             </tr>
                             <tr>
@@ -1693,7 +1693,7 @@
                                 <td><input type="number" name="kayuJumlah" value="8" onkeyup="calculateRowVolume(this)"
                                         required></td>
                                 <td><input type="text" name="kayuVolume" readonly></td>
-                                <td><input type="text" name="kayuKeterangan" value=""></td>
+                                <td><input type="text" name="kayuKeterangan" value="Kayu Rakyat"></td>
                                 <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
                             </tr>
                         </tbody>
@@ -2490,6 +2490,7 @@
             `;
 
             let totalVolume = 0;
+            let totalJumlah = 0; // Inisialisasi total jumlah
             const rows = document.querySelectorAll('#daftarKayuTable tbody tr');
             rows.forEach(row => {
                 const nomor = row.querySelector('[name="kayuNomor"]').value;
@@ -2499,6 +2500,7 @@
                 const keterangan = row.querySelector('[name="kayuKeterangan"]').value;
 
                 totalVolume += volume;
+                totalJumlah += parseInt(jumlah, 10) || 0; // Tambahkan jumlah ke total
 
                 daftarKayuTableHTML += `
                     <tr>
@@ -2513,7 +2515,8 @@
 
             daftarKayuTableHTML += `
                     <tr style="font-weight: bold;">
-                        <td colspan="3">JUMLAH</td>
+                        <td colspan="2">JUMLAH</td>
+                        <td>${totalJumlah}</td>
                         <td>${parseFloat(totalVolume.toFixed(3))}</td>
                         <td></td>
                     </tr>
@@ -2665,16 +2668,16 @@
         function addRow() {
             const tableBody = document.querySelector('#daftarKayuTable tbody');
             const newRow = tableBody.insertRow();
-            const rowCount = tableBody.rows.length;
-
+            
             newRow.innerHTML = `
-                <td><input type="number" name="kayuNomor" value="${rowCount + 1}" readonly style="width: 50px;"></td>
+                <td><input type="number" name="kayuNomor" value="" readonly style="width: 50px;"></td>
                 <td><input type="text" name="kayuJenis" onkeyup="calculateRowVolume(this)" required></td>
                 <td><input type="number" name="kayuJumlah" onkeyup="calculateRowVolume(this)"></td>
                 <td><input type="text" name="kayuVolume" readonly></td>
-                <td><input type="text" name="kayuKeterangan"></td>
+                <td><input type="text" name="kayuKeterangan" value="Kayu Rakyat"></td>
                 <td class="no-print"><button type="button" onclick="removeRow(this)">Hapus</button></td>
             `;
+            updateRowNumbers();
             updateTotalVolume();
         }
 
